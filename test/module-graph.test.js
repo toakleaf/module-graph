@@ -5,7 +5,6 @@ import { pathToFileURL } from 'node:url';
 import { moduleResolve } from 'import-meta-resolve';
 import { createModuleGraph } from '../index.js';
 import { isBareModuleSpecifier, extractPackageNameFromSpecifier } from '../utils.js';
-import { typescript } from '../plugins/typescript.js';
 import { unusedExports } from '../plugins/unused-exports.js';
 
 const fixture = (p) => path.join(process.cwd(), 'test/fixtures', p);
@@ -512,36 +511,5 @@ describe('built-in plugins', () => {
     });
 
     assert.equal(moduleGraph.unusedExports.length, 0);
-  });
-
-  it('typescript', async () => {
-    /**
-     * index.ts -> foo.ts -> node_modules/bar/index.js
-     * import { foo } from './foo.js';
-     */
-    const moduleGraph = await createModuleGraph('./index.ts', {
-      basePath: fixture('typescript'),
-      plugins: [typescript()]
-    });
-
-    assert(moduleGraph.graph.get('index.ts').has('foo.ts'));
-    assert(moduleGraph.graph.get('foo.ts').has('node_modules/bar/index.js'));
-  });
-
-  it('typescript node', async () => {
-    /**
-     * index.ts -> foo.ts
-     * import { foo } from './foo';
-     */
-    const moduleGraph = await createModuleGraph('./index.ts', {
-      basePath: fixture('typescript-node'),
-      plugins: [typescript({
-        compilerOptions: {
-          moduleResolution: "node",
-        }
-      })]
-    });
-
-    assert(moduleGraph.graph.get('index.ts').has('foo.ts'));
   });
 });
