@@ -58,7 +58,10 @@ export async function createModuleGraph(entrypoints, options = {}) {
   });
 
   const processedEntrypoints = (typeof entrypoints === "string" ? [entrypoints] : entrypoints);
-  const modules = processedEntrypoints.map(e => toUnix(path.relative(basePath, path.join(basePath, e))));
+  const modules = processedEntrypoints.map((e) => {
+      const absEntryPoint = e.startsWith(basePath) ? e : path.join(basePath, e);
+      return toUnix(path.relative(basePath, absEntryPoint));
+  });
 
   /**
    * [PLUGINS] - start
