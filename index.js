@@ -246,7 +246,9 @@ export async function createModuleGraph(entrypoints, options = {}) {
           path: pathToDependency,
           importedBy: [],
           facade: false,
-          hasModuleSyntax: true,
+          hasModuleSyntax: !foreignModules.some((match) =>
+            match(/** @type {string} */ (pathToDependency))
+          ),
           source: '',
           ...(packageRoot ? {packageRoot} : {}),
         }

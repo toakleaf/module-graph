@@ -142,6 +142,7 @@ describe('createModuleGraph', () => {
 
     assert(moduleGraph.graph.get('index.ts').has('data.json'));
     assert(moduleGraph.graph.get('index.ts').has('styles.css'));
+    assert.equal(moduleGraph.modules.get('styles.css').hasModuleSyntax, false);
   });
 
   it('virtual-modules', async () => {
@@ -150,6 +151,7 @@ describe('createModuleGraph', () => {
     const moduleGraph = await createModuleGraph('./index.js', { basePath: fixture('virtual-modules'), foreignModules: ['virtual:*'] ,virtualModules: ['virtual:*'] });
 
     assert(moduleGraph.graph.get('index.js').has('virtual:module'));
+    assert.equal(moduleGraph.modules.get('virtual:module').hasModuleSyntax, false);
   });
 
   it('multiple-import-chains', async () => {
