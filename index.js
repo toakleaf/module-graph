@@ -120,13 +120,13 @@ export async function createModuleGraph(entrypoints, options = {}) {
       const { output } = await parseAsync({ input: [{ filename, code: source }] })
       const { imports, facade, hasModuleSyntax } = output[0];
       importLoop: for (let { n: importee, ss: start, se: end } of imports) {
-        const isvirtualModule = virtualModules.some((match) =>
+        const isVirtualModule = virtualModules.some((match) =>
             match(/** @type {string} */ (importee))
         );
         const importString = source.substring(start, end);
         if (!importee) continue;
         if (ignoreDynamicImport && importString.startsWith('import(')) continue;
-        if (!foreignModules.some((match) => match(/** @type {string} */ (importee)))) {
+        if (!foreignModules.some((match) => match(/** @type {string} */ (importee))) && !isVirtualModule) {
           if (isBareModuleSpecifier(importee) && external.ignore) continue;
           if (isBareModuleSpecifier(importee) && external.exclude?.length && external.exclude?.includes(extractPackageNameFromSpecifier(importee))) continue;
           if (isBareModuleSpecifier(importee) && external.include?.length && !external.include?.includes(extractPackageNameFromSpecifier(importee))) continue;
@@ -165,7 +165,7 @@ export async function createModuleGraph(entrypoints, options = {}) {
          * [PLUGINS] - resolve
          */
         let resolvedURL;
-        if (isvirtualModule) {
+        if (isVirtualModule) {
           resolvedURL = importee;
         }
         for (const { name, resolve } of plugins) {
@@ -200,7 +200,7 @@ export async function createModuleGraph(entrypoints, options = {}) {
             continue;
           }
         }
-        const pathToDependency = isvirtualModule
+        const pathToDependency = isVirtualModule
           ? importee
           : toUnix(path.relative(basePath, fileURLToPath(resolvedURL)));
 

@@ -138,7 +138,7 @@ describe('createModuleGraph', () => {
       Error,
     );
 
-    const moduleGraph = await createModuleGraph('./index.ts', { basePath: fixture('import-attributes'), foreignModules: ['**/*.css'] });
+    const moduleGraph = await createModuleGraph('./index.ts', { basePath: fixture('import-attributes'), foreignModules: ['**/*.css'], external: {ignore: true} });
 
     assert(moduleGraph.graph.get('index.ts').has('data.json'));
     assert(moduleGraph.graph.get('index.ts').has('styles.css'));
@@ -148,7 +148,7 @@ describe('createModuleGraph', () => {
   it('virtual-modules', async () => {
     // When a virtual module is not associated with a file, it should be listed as a foreignModule as well.
     // In cases where there is an associated file a plugin would be used to resolve the virtual module.
-    const moduleGraph = await createModuleGraph('./index.js', { basePath: fixture('virtual-modules'), foreignModules: ['virtual:*'] ,virtualModules: ['virtual:*'] });
+    const moduleGraph = await createModuleGraph('./index.js', { basePath: fixture('virtual-modules'), foreignModules: ['virtual:*'], virtualModules: ['virtual:*'], external: {ignore: true} });
 
     assert(moduleGraph.graph.get('index.js').has('virtual:module'));
     assert.equal(moduleGraph.modules.get('virtual:module').hasModuleSyntax, false);
