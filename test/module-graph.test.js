@@ -403,6 +403,58 @@ describe('plugins', () => {
     assert.equal(called, false);
   });
 
+  it('append side effect module', async () => {
+    const appendPlugin = {
+      name: 'append-plugin',
+      append: ({ module, moduleGraph, importee, specifier, source }) => {
+        if (module.path.endsWith('bar.js')) {
+          const sideEffect = 'side-effect.js';
+          const sideEffectPath = path.join(moduleGraph.basePath, sideEffect);
+          const sideEffectModule = {
+            href: 'file://' + sideEffectPath,
+            pathname: sideEffectPath,
+            path: sideEffect,
+            importedBy: [],
+            facade: false,
+            hasModuleSyntax: true,
+            source: '',
+          }
+          return [sideEffectModule];
+        }
+      }
+    }
+    const moduleGraph = await createModuleGraph('./index.js', { 
+      basePath: fixture('plugins-append'),
+      plugins: [appendPlugin]
+    });
+    assert(moduleGraph.graph.get('index.js').has('bar.js'));
+    assert(moduleGraph.graph.get('index.js').has('foo.js'));
+    assert(moduleGraph.graph.get('index.js').has('side-effect.js'));
+    assert(moduleGraph.graph.get('side-effect.js').has('baz.js'));
+  });
+
+
+  it('append modifying original module', async () => {
+    const appendPlugin = {
+      name: 'append-plugin',
+      append: ({ module, importee, specifier, source, moduleGraph }) => {
+        if (module.path.endsWith('bar.js')) {
+          return [{
+            ...module,
+            extraField: 'isPresent'
+          }];
+        }
+      }
+    }
+    const moduleGraph = await createModuleGraph('./index.js', { 
+      basePath: fixture('plugins-append'),
+      plugins: [appendPlugin]
+    });
+    assert(moduleGraph.graph.get('index.js').has('bar.js'));
+    assert(moduleGraph.graph.get('index.js').has('foo.js'));
+    assert.equal(moduleGraph.modules.get('bar.js').extraField, 'isPresent');
+  });
+
   it('analyze', async () => {
     const analyzePlugin = {
       name: 'analyze-plugin',
