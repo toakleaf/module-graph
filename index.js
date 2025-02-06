@@ -120,11 +120,9 @@ export async function createModuleGraph(entrypoints, options = {}) {
       const { output } = await parseAsync({ input: [{ filename, code: source }] })
       const { imports, facade, hasModuleSyntax } = output[0];
       importLoop: for (let { n: importee, ss: start, se: end } of imports) {
-        const isVirtualModule = virtualModules.some((match) =>
-            match(/** @type {string} */ (importee))
-        );
         const importString = source.substring(start, end);
         if (!importee) continue;
+        const isVirtualModule = virtualModules.some((match) => match(/** @type {string} */ (importee)));
         if (ignoreDynamicImport && importString.startsWith('import(')) continue;
         if (!foreignModules.some((match) => match(/** @type {string} */ (importee))) && !isVirtualModule) {
           if (isBareModuleSpecifier(importee) && external.ignore) continue;
