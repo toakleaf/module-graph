@@ -406,21 +406,24 @@ describe('plugins', () => {
   it('append side effect module', async () => {
     const appendPlugin = {
       name: 'append-plugin',
-      append: ({ module, moduleGraph, importee, specifier, source }) => {
-        if (module.path.endsWith('bar.js')) {
-          const sideEffect = 'side-effect.js';
-          const sideEffectPath = path.join(moduleGraph.basePath, sideEffect);
-          const sideEffectModule = {
-            href: 'file://' + sideEffectPath,
-            pathname: sideEffectPath,
-            path: sideEffect,
-            importedBy: [],
-            facade: false,
-            hasModuleSyntax: true,
-            source: '',
+      append: ({ modules, moduleGraph, importee, specifier, source }) => {
+        return modules.map((module) => {
+          if (module.path.endsWith('bar.js')) {
+            const sideEffect = 'side-effect.js';
+            const sideEffectPath = path.join(moduleGraph.basePath, sideEffect);
+            const sideEffectModule = {
+              href: 'file://' + sideEffectPath,
+              pathname: sideEffectPath,
+              path: sideEffect,
+              importedBy: [],
+              facade: false,
+              hasModuleSyntax: true,
+              source: '',
+            }
+            return sideEffectModule;
           }
-          return [sideEffectModule];
-        }
+          return module;
+        });
       }
     }
     const moduleGraph = await createModuleGraph('./index.js', { 
@@ -433,17 +436,19 @@ describe('plugins', () => {
     assert(moduleGraph.graph.get('side-effect.js').has('baz.js'));
   });
 
-
   it('append modifying original module', async () => {
     const appendPlugin = {
       name: 'append-plugin',
-      append: ({ module, importee, specifier, source, moduleGraph }) => {
-        if (module.path.endsWith('bar.js')) {
-          return [{
-            ...module,
-            extraField: 'isPresent'
-          }];
-        }
+      append: ({ modules, importee, specifier, source, moduleGraph }) => {
+        return modules.map((module) => {
+          if (module.path.endsWith('bar.js')) {
+            return {
+              ...module,
+              extraField: 'isPresent'
+            };
+          }
+          return module;
+        });
       }
     }
     const moduleGraph = await createModuleGraph('./index.js', { 
@@ -453,6 +458,54 @@ describe('plugins', () => {
     assert(moduleGraph.graph.get('index.js').has('bar.js'));
     assert(moduleGraph.graph.get('index.js').has('foo.js'));
     assert.equal(moduleGraph.modules.get('bar.js').extraField, 'isPresent');
+  });
+
+  it('multiple append plugins', async () => {
+    const appendPlugin1 = {
+      name: 'append-plugin-1',
+      append: ({ modules, moduleGraph, importee, specifier, source }) => {
+        return modules.map((module) => {
+          if (module.path.endsWith('bar.js')) {
+            const sideEffect = 'side-effect.js';
+            const sideEffectPath = path.join(moduleGraph.basePath, sideEffect);
+            const sideEffectModule = {
+              href: 'file://' + sideEffectPath,
+              pathname: sideEffectPath,
+              path: sideEffect,
+              importedBy: [],
+              facade: false,
+              hasModuleSyntax: true,
+              source: '',
+            }
+            return sideEffectModule;
+          }
+          return module;
+        });
+      }
+    }
+    const appendPlugin2 = {
+      name: 'append-plugin',
+      append: ({ modules, importee, specifier, source, moduleGraph }) => {
+        return modules.map((module) => {
+          if (module.path.endsWith('bar.js')) {
+            return {
+              ...module,
+              extraField: 'isPresent'
+            };
+          }
+          return module;
+        });
+      }
+    }
+    const moduleGraph = await createModuleGraph('./index.js', { 
+      basePath: fixture('plugins-append'),
+      plugins: [appendPlugin1, appendPlugin2]
+    });
+    assert(moduleGraph.graph.get('index.js').has('bar.js'));
+    assert(moduleGraph.graph.get('index.js').has('foo.js'));
+    assert.equal(moduleGraph.modules.get('bar.js').extraField, 'isPresent');
+    assert(moduleGraph.graph.get('index.js').has('side-effect.js'));
+    assert(moduleGraph.graph.get('side-effect.js').has('baz.js'));
   });
 
   it('analyze', async () => {

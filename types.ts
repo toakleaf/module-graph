@@ -66,16 +66,16 @@ export interface Plugin {
   } & NapiResolveOptions) => URL | void | Promise<void | URL>;
   /**
    * Runs for every import starting (but excluding) the entrypoints
-   * Can be used to modify module object prior to inclusion in graph,
+   * Can be used to modify module objects prior to inclusion in graph,
    * or to bring in side effect modules when certain conditions are met.
-   * If nothing is returned, the module will be included as is.
+   * If nothing is returned, the module[s] will be included as is.
    * If an array of modules is returned, they will be included in addition to
    * the original module.
    * You can also modify the original module and return it.
    * The module's `path` key is used in determining uniqueness during collisions.
    */
   append?: (params: {
-    module: Module,
+    modules: Module[],
     moduleGraph: ModuleGraph,
     importer: string,
     specifier: ImportSpecifier,

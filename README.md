@@ -253,9 +253,9 @@ const moduleGraph = await createModuleGraph('./index.js', {
 
 > Runs for every module
 
-Can be used to modify module object prior to inclusion in graph, or to bring in side effect modules when certain conditions are met.
+Can be used to modify module objects prior to inclusion in graph, or to bring in side effect modules when certain conditions are met.
 
-If nothing is returned, the module will be included as is.
+If nothing is returned, the module[s] will be included as is.
 
 If an array of modules is returned, they will be included in addition to the original module.
 
@@ -266,21 +266,24 @@ The module's `path` key is used in determining uniqueness during collisions.
 ```js
 const plugin = {
   name: 'my-plugin',
-  append: ({ module, moduleGraph, importee, specifier, source }) => {
-    if (module.path.endsWith('.svg')) {
-      const sideEffect = 'side-effect.js';
-      const sideEffectPath = path.join(moduleGraph.basePath, sideEffect);
-      const sideEffectModule = {
-        href: 'file://' + sideEffectPath,
-        pathname: sideEffectPath,
-        path: sideEffect,
-        importedBy: [],
-        facade: false,
-        hasModuleSyntax: true,
-        source: '',
+  append: ({ modules, moduleGraph, importee, specifier, source }) => {
+    return modules.map((module) => {
+      if (module.path.endsWith('bar.js')) {
+        const sideEffect = 'side-effect.js';
+        const sideEffectPath = path.join(moduleGraph.basePath, sideEffect);
+        const sideEffectModule = {
+          href: 'file://' + sideEffectPath,
+          pathname: sideEffectPath,
+          path: sideEffect,
+          importedBy: [],
+          facade: false,
+          hasModuleSyntax: true,
+          source: '',
+        }
+        return sideEffectModule;
       }
-      return [{...module, someNewField: 'data'}, sideEffectModule];
-    }
+      return module;
+    });
   }
 }
 

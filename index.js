@@ -211,7 +211,7 @@ export async function createModuleGraph(entrypoints, options = {}) {
         for (const { name, append } of plugins) {
           try {
             const results = await append?.({
-              module: newModule,
+              modules: Array.from(modules.values()),
               moduleGraph,
               importer: dep,
               specifier,
